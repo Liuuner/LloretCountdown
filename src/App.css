@@ -1,6 +1,47 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+main {
+  padding: 0 1rem 1rem 1rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  
+  background: white;
+}
+
+#drop_pattern {
+  position: absolute;
+  height: 100%;
+  width: 200%;
+  bottom: 0;
+  right: 0;
+  background-image: url("/drop_pattern.svg");
+  background-repeat: repeat;
+  background-size: 5%;
+  z-index: -2;
+  animation: pan 50s linear infinite;
+}
+
+#drop_gradient {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background: radial-gradient(circle, transparent 80%, #fce795 100%);
+}
+
+@keyframes pan {
+  0% {
+    transform: translate(0%, 0%);
+  }
+  
+  100% {
+    transform: translate(50%, 0%);
+  }
+}
+
+main:is(.complete) {
+  background-color: red;
 }

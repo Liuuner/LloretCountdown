@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   preserveAspectRatio="xMidYMid meet"
+   version="1.0"
+   viewBox="-2.1 0.0 100.4 146.0"
+   zoomAndPan="magnify"
+   id="svg2"
+   sodipodi:docname="drop.svg"
+   inkscape:export-filename="improved_drop.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="namedview2"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.7631642"
+     inkscape:cx="68.293592"
+     inkscape:cy="82.510352"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <g
+     stroke="none"
+     stroke-width="4"
+     style="fill: none;"
+     id="g2"
+     inkscape:label="drop"
+     inkscape:export-filename=".\g2.svg"
+     inkscape:export-xdpi="96"
+     inkscape:export-ydpi="96">
+    <path
+       id="path1"
+       style="fill:rgb(255, 222, 89)"
+       d="M 123.7902 53.716062 C 121.95537 67.838028 116.74049 81.508372 108.70427 93.264891 C 103.71065 100.57026 97.683554 107.09976 92.128094 113.98755 C 86.572634 120.87532 81.412575 128.26298 78.532391 136.63012 C 73.609455 150.93161 76.074811 167.55337 84.899578 179.83716 C 93.724345 192.12093 108.66513 199.75512 123.7902 199.75512 C 138.91528 199.75512 153.85802 192.12094 162.68278 179.83716 C 171.50755 167.55337 173.97095 150.93162 169.04802 136.63012 C 166.16783 128.26298 161.00778 120.87532 155.45231 113.98755 C 149.89686 107.09976 143.86976 100.57026 138.87614 93.264891 C 130.83992 81.508373 125.62503 67.838028 123.7902 53.716062 z M 108.35466 107.55395 C 107.13529 108.51947 105.9494 109.52801 104.79802 110.57348 C 99.300139 115.78429 95.194056 122.46314 93.085125 129.74145 C 90.543083 138.51452 90.913354 148.10722 94.126141 156.65747 C 96.033589 161.73378 98.919657 166.43901 102.57731 170.44262 L 95.018719 180.45434 C 88.76274 174.57345 84.675735 166.43715 83.692547 157.90747 C 82.628868 148.67948 85.123738 139.31034 89.284344 131.00512 C 93.136422 123.31577 98.431425 116.35441 104.79802 110.57348 C 105.92713 109.50333 107.11322 108.49242 108.35466 107.55395 z M 104.51286 172.17505 C 104.96286 172.58326 105.42004 172.9855 105.882 173.38012 C 108.96626 176.01488 112.31261 178.34216 115.85661 180.31567 L 107.30973 191.052 C 105.63103 190.05353 104.02615 188.93293 102.51091 187.70044 C 100.49977 186.06459 98.64717 184.23263 96.989422 182.2395 L 104.51286 172.17505 z "
+       transform="translate(-75.732,-53.677)"
+       inkscape:label="path1" />
+  </g>
+</svg>
