@@ -8,8 +8,12 @@ function App() {
     const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 10));
     const [isComplete, setIsComplete] = useState(false);
 
-    const onComplete = () => {
+    const handleOnComplete = () => {
         setIsComplete(true);
+    }
+
+    const handleOnMinuteChange = () => {
+
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -18,7 +22,7 @@ function App() {
 
     return (
         <>
-            <main className={isComplete ? "complete" : "incomplete"}>
+            <main>
                 <h1>Countdown to Lloret</h1>
                 <FlipClockCountdown
                     to={target}
@@ -26,8 +30,9 @@ function App() {
                     digitBlockStyle={{backgroundColor: "var(--secondary)", fontWeight: 600}}
                     separatorStyle={{color: "var(--secondary)"}}
                     labelStyle={{color: "#000"}}
-                    onComplete={onComplete}
+                    onComplete={handleOnComplete}
                     hideOnComplete={false}
+                    onMinuteChange={handleOnMinuteChange}
                 />
             </main>
 

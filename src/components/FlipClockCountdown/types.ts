@@ -111,4 +111,8 @@ export interface FlipClockCountdownProps
    * @default 0.7
    */
   duration?: number;
+  onMinuteChange?: () => void;
+  onHourChange?: () => void;
+  onDayChange?: () => void;
+  onWeekChange?: () => void;
 }
