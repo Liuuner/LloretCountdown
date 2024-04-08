@@ -1,19 +1,20 @@
 import './App.css';
 import FlipClockCountdown, {createDate} from "./components/FlipClockCountdown";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 
 function App() {
     // const [target, setTarget] = useState<Date>(createDate(2024, 4, 2, 15, 11));
     const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 10));
     const [isComplete, setIsComplete] = useState(false);
+    const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
 
     const handleOnComplete = () => {
         setIsComplete(true);
     }
 
     const handleOnMinuteChange = () => {
-
+        setIsPlaneRight((b) => !b);
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -22,6 +23,7 @@ function App() {
 
     return (
         <>
+            <div id={"plane"} className={isPlaneRight ? "right" : "left"}/>
             <main>
                 <h1>Countdown to Lloret</h1>
                 <FlipClockCountdown

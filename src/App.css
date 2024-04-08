@@ -1,103 +1,136 @@
 main {
-  padding: 0 1rem 1rem 1rem;
-  border-radius: 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  
-  background: white;
+    padding: 0 1rem 1rem 1rem;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    background: white;
 }
 
 #drop_pattern {
-  position: absolute;
-  height: 100%;
-  width: 200%;
-  bottom: 0;
-  right: 0;
-  background-image: url("/drop_pattern.svg");
-  background-repeat: repeat;
-  background-size: 5%;
-  z-index: -2;
-  animation: pan 50s linear infinite;
+    position: absolute;
+    height: 100%;
+    width: 200%;
+    bottom: 0;
+    right: 0;
+    background-image: url("/drop_pattern.svg");
+    background-repeat: repeat;
+    background-size: 5%;
+    z-index: -2;
+    animation: pan 50s linear infinite;
 }
 
 #drop_gradient {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  background: radial-gradient(circle, transparent 80%, #fce795 100%);
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    background: radial-gradient(circle, transparent 80%, #fce795 100%);
 }
 
 @keyframes pan {
-  0% {
-    transform: translate(0%, 0%);
-  }
-  
-  100% {
-    transform: translate(50%, 0%);
-  }
+    0% {
+        transform: translate(0%, 0%);
+    }
+    
+    100% {
+        transform: translate(50%, 0%);
+    }
 }
 
 main:is(.complete) {
-  background-color: red;
+    background-color: red;
 }
 
 body::before {
-  content: "";
-  background-image: url("/palm.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  height: 80%;
-  width: 60%;
-  position: absolute;
-  left: -35%;
-  bottom: 40%;
-  transform-origin: bottom left;
-  animation: infinite ease-in-out palm_wave_right 10s;
+    content: "";
+    background-image: url("/palm.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 80%;
+    width: 60%;
+    position: absolute;
+    left: -35%;
+    bottom: 40%;
+    transform-origin: bottom left;
+    animation: infinite ease-in-out palm_wave_right 10s;
+    z-index: 100;
 }
 
 @keyframes palm_wave_right {
-  0% {
-    transform: rotate(10deg);
-  }
-  50% {
-    transform: rotate(25deg);
-  }
-  100% {
-    transform: rotate(10deg);
-  }
+    0% {
+        transform: rotate(10deg);
+    }
+    50% {
+        transform: rotate(25deg);
+    }
+    100% {
+        transform: rotate(10deg);
+    }
 }
 
 
 body::after {
-  content: "";
-  background-image: url("/palm.png");
-  filter: flipV();
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  height: 80%;
-  width: 60%;
-  position: absolute;
-  right: -35%;
-  bottom: 40%;
-  transform-origin: bottom right;
-  animation: infinite ease-in-out palm_wave_left 13s;
+    content: "";
+    background-image: url("/palm.png");
+    filter: flipV();
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 80%;
+    width: 60%;
+    position: absolute;
+    right: -35%;
+    bottom: 40%;
+    transform-origin: bottom right;
+    animation: infinite ease-in-out palm_wave_left 13s;
+    z-index: 100;
 }
 
 @keyframes palm_wave_left {
-  0% {
-    transform: rotate(-25deg);
-  }
-  50% {
-    transform: rotate(-10deg);
-  }
-  100% {
-    transform: rotate(-25deg);
-  }
+    0% {
+        transform: rotate(-25deg);
+    }
+    50% {
+        transform: rotate(-10deg);
+    }
+    100% {
+        transform: rotate(-25deg);
+    }
+}
+
+#plane {
+    position: absolute;
+    transition: ease-in-out 7s;
+    width: 25%;
+    aspect-ratio: 2;
+    top: 0;
+    right: -25%;
+}
+
+#plane::before {
+    display: inline-block;
+    content: "";
+    height: 100%;
+    width: 100%;
+    background-image: url("/plane.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+#plane.right::before {
+    transform: scaleX(-1);
+}
+
+#plane.left {
+    transform: translate(-150vw, 0%);
+}
+
+#plane.left::before {
+    transform: scaleX(1);
 }

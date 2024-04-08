@@ -56,19 +56,21 @@ function FlipClockCountdown(props: FlipClockCountdownProps) {
 
     function tick() {
         const newState = constructState();
-        if (newState.timeDelta.minutes !== state.timeDelta.minutes && onMinuteChange) {
-            onMinuteChange();
-        }
-        if (newState.timeDelta.hours !== state.timeDelta.hours && onHourChange) {
-            onHourChange();
-        }
-        if (newState.timeDelta.days !== state.timeDelta.days && onDayChange) {
-            onDayChange();
-        }
-        if (newState.timeDelta.weeks !== state.timeDelta.weeks && onWeekChange) {
-            onWeekChange();
-        }
-        setState(newState);
+        setState((oldState) => {
+            if (newState.timeDelta.minutes !== oldState.timeDelta.minutes && onMinuteChange) {
+                onMinuteChange();
+            }
+            if (newState.timeDelta.hours !== oldState.timeDelta.hours && onHourChange) {
+                onHourChange();
+            }
+            if (newState.timeDelta.days !== oldState.timeDelta.days && onDayChange) {
+                onDayChange();
+            }
+            if (newState.timeDelta.weeks !== oldState.timeDelta.weeks && onWeekChange) {
+                onWeekChange();
+            }
+            return newState;
+        });
         onTick(newState);
         if (newState.completed) {
             clearTimer();
