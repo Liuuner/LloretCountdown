@@ -45,3 +45,59 @@ main {
 main:is(.complete) {
   background-color: red;
 }
+
+body::before {
+  content: "";
+  background-image: url("/palm.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 80%;
+  width: 60%;
+  position: absolute;
+  left: -35%;
+  bottom: 40%;
+  transform-origin: bottom left;
+  animation: infinite ease-in-out palm_wave_right 10s;
+}
+
+@keyframes palm_wave_right {
+  0% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(25deg);
+  }
+  100% {
+    transform: rotate(10deg);
+  }
+}
+
+
+body::after {
+  content: "";
+  background-image: url("/palm.png");
+  filter: flipV();
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 80%;
+  width: 60%;
+  position: absolute;
+  right: -35%;
+  bottom: 40%;
+  transform-origin: bottom right;
+  animation: infinite ease-in-out palm_wave_left 13s;
+}
+
+@keyframes palm_wave_left {
+  0% {
+    transform: rotate(-25deg);
+  }
+  50% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(-25deg);
+  }
+}

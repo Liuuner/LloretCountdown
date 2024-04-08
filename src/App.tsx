@@ -5,7 +5,7 @@ import {useState} from "react";
 
 function App() {
     // const [target, setTarget] = useState<Date>(createDate(2024, 4, 2, 15, 11));
-    const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 0));
+    const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 10));
     const [isComplete, setIsComplete] = useState(false);
 
     const onComplete = () => {
