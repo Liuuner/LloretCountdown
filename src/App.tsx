@@ -20,9 +20,7 @@ function App() {
     // @ts-expect-error
     window.setTarget = setTarget;
 
-    useEffect(() => {
-        console.log(isDraw);
-    }, [isDraw]);
+
 
     const [names, setNames] = useState<string[]>(Array(11).fill(''));
     const [assignedNames, setAssignedNames] = useState<string[]>(Array(11).fill(''));
