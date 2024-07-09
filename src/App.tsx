@@ -1,6 +1,6 @@
 import './App.css';
-import FlipClockCountdown, { createDate } from "./components/FlipClockCountdown";
-import { useEffect, useState } from "react";
+import FlipClockCountdown, {createDate} from "./components/FlipClockCountdown";
+import { useState } from "react";
 
 function App() {
     const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 10));
@@ -20,8 +20,6 @@ function App() {
     // @ts-expect-error
     window.setTarget = setTarget;
 
-
-
     const [names, setNames] = useState<string[]>(Array(11).fill(''));
     const [assignedNames, setAssignedNames] = useState<string[]>(Array(11).fill(''));
 
@@ -36,11 +34,12 @@ function App() {
 
         // Assign each person to another person
         for (let i = 0; i < names.length; i++) {
-            // Ensure that no one is assigned to themselves
-            if (names[i] === shuffledNames[i]) {
-                const j = (i + 1) % names.length;
-                [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
+            // Find a random index that is not the current index
+            let j = i;
+            while (j === i) {
+                j = Math.floor(Math.random() * names.length);
             }
+            [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
         }
 
         setAssignedNames(shuffledNames);
