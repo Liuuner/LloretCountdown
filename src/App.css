@@ -134,3 +134,6 @@ body::after {
 #plane.left::before {
     transform: scaleX(1);
 }
+.drawTable {
+    border: 1px black;
+}
