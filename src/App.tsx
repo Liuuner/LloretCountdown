@@ -7,8 +7,8 @@ function App() {
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
-    const [canDrawSelf, setCanDrawSelf] = useState(false); // Zustand für die Option sich selbst zu ziehen
 
+    const cringeList = ["lars", "gian", "silvan", "laurin", "luca", "jens", "julian", "pablo"]
     const handleOnComplete = () => {
         setIsComplete(true);
     }
@@ -25,25 +25,26 @@ function App() {
     const [assignedNames, setAssignedNames] = useState<string[]>(Array(11).fill(''));
 
     const handleNameChange = (index: number, value: string) => {
+
+        if ( value.toLowerCase() ===  "marc" || value.toLowerCase() === "liun"){
+            const newNames = [...names];
+            newNames[index] = value + " the King";
+            setNames(newNames);
+        }
+        else if (cringeList.includes(value.toLowerCase())){
         const newNames = [...names];
-        newNames[index] = value;
+        newNames[index] = value + " the Gay";
         setNames(newNames);
+        }
+        else {
+            const newNames = [...names];
+            newNames[index] = value;
+            setNames(newNames);
+        }
     };
 
     const generateAssignments = () => {
-        let shuffledNames = shuffleArray([...names]);
-
-        // Assign each person to another person
-        for (let i = 0; i < names.length; i++) {
-            // Check if self-draw is allowed and skip if not
-            if (!canDrawSelf && names[i] === shuffledNames[i]) {
-                let j = i;
-                while (names[j] === shuffledNames[i] || shuffledNames[j] === names[i]) {
-                    j = Math.floor(Math.random() * names.length);
-                }
-                [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
-            }
-        }
+        const shuffledNames = shuffleArray([...names]);
 
         setAssignedNames(shuffledNames);
     };
@@ -62,8 +63,8 @@ function App() {
                 {isDraw ? (
                     <div>
                         <table>
-                            <thead>
-                            <tr>
+                            <thead className="tableThead">
+                            <tr className="topLayer">
                                 <th>Name</th>
                                 <th>Zugewiesener Name</th>
                             </tr>
@@ -71,38 +72,38 @@ function App() {
                             <tbody>
                             {names.map((name, index) => (
                                 <tr key={index}>
-                                    <td><input type="text" value={name} onChange={(e) => handleNameChange(index, e.target.value)} /></td>
-                                    <td>{assignedNames[index]}</td>
+                                    <td><input type="text" value={name}
+                                               onChange={(e) => handleNameChange(index, e.target.value)}
+                                               className="inputField"/></td>
+                                    <td className="assignedNames">{assignedNames[index]}</td>
                                 </tr>
                             ))}
                             </tbody>
                         </table>
-                        <button onClick={generateAssignments}>Generieren</button>
-                        <label>
-                            <input type="checkbox" checked={canDrawSelf} onChange={() => setCanDrawSelf(!canDrawSelf)} />
-                            Sich selbst ziehen erlauben
-                        </label>
+                        <button onClick={generateAssignments} className={"generateButton"}>Generieren</button>
+
                     </div>
                 ) : (
                     <div>
-                        <div id={"plane"} className={isPlaneRight ? "right" : "left"} />
+                        <div id={"plane"} className={isPlaneRight ? "right" : "left"}/>
                         <main>
                             <h1 onClick={() => setIsDraw(true)}>Countdown to Lloret</h1>
                             <FlipClockCountdown
                                 to={target}
-                                dividerStyle={{ color: "#FFF" }}
-                                digitBlockStyle={{ backgroundColor: "var(--secondary)", fontWeight: 600 }}
-                                separatorStyle={{ color: "var(--secondary)" }}
-                                labelStyle={{ color: "#000" }}
+                                dividerStyle={{color: "#FFF"}}
+                                digitBlockStyle={{backgroundColor: "var(--secondary)", fontWeight: 600}}
+                                separatorStyle={{color: "var(--secondary)"}}
+                                labelStyle={{color: "#000"}}
                                 onComplete={handleOnComplete}
                                 hideOnComplete={false}
                                 onMinuteChange={handleOnMinuteChange}
                             />
                         </main>
-                        <div id={"drop_gradient"} />
-                        <div id="drop_pattern" />
+
                     </div>
                 )}
+                <div id={"drop_gradient"}/>
+                <div id="drop_pattern"/>
             </div>
         </>
     );
