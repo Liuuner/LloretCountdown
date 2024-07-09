@@ -1,5 +1,5 @@
 import './App.css';
-import FlipClockCountdown, {createDate} from "./components/FlipClockCountdown";
+import FlipClockCountdown, { createDate } from "./components/FlipClockCountdown";
 import { useState } from "react";
 
 function App() {
@@ -7,6 +7,7 @@ function App() {
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
+    const [canDrawSelf, setCanDrawSelf] = useState(false); // Zustand für die Option sich selbst zu ziehen
 
     const handleOnComplete = () => {
         setIsComplete(true);
@@ -34,12 +35,14 @@ function App() {
 
         // Assign each person to another person
         for (let i = 0; i < names.length; i++) {
-            // Find a random index that is not the current index
-            let j = i;
-            while (j === i) {
-                j = Math.floor(Math.random() * names.length);
+            // Check if self-draw is allowed and skip if not
+            if (!canDrawSelf && names[i] === shuffledNames[i]) {
+                let j = i;
+                while (names[j] === shuffledNames[i] || shuffledNames[j] === names[i]) {
+                    j = Math.floor(Math.random() * names.length);
+                }
+                [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
             }
-            [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
         }
 
         setAssignedNames(shuffledNames);
@@ -75,6 +78,10 @@ function App() {
                             </tbody>
                         </table>
                         <button onClick={generateAssignments}>Generieren</button>
+                        <label>
+                            <input type="checkbox" checked={canDrawSelf} onChange={() => setCanDrawSelf(!canDrawSelf)} />
+                            Sich selbst ziehen erlauben
+                        </label>
                     </div>
                 ) : (
                     <div>
