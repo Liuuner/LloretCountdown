@@ -1,14 +1,16 @@
 import './App.css';
 import FlipClockCountdown, { createDate } from "./components/FlipClockCountdown";
 import { useState } from "react";
+import ParticlesContainer from "./ParticlesContainer.tsx";
 
 function App() {
-    const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 7, 10));
+    //const [target, setTarget] = useState<Date>(createDate(2024, 6, 16, 6, 45));
+    const [target, setTarget] = useState<Date>(createDate(2024, 7, 16, 6, 45));
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
 
-    const cringeList = ["lars", "gian", "silvan", "laurin", "luca", "jens", "julian", "pablo"]
+    const cringeList = ["lars", "gian", "silvan", "laurin", "luca", "jens", "julian", "pablo", "jerome"]
     const handleOnComplete = () => {
         setIsComplete(true);
     }
@@ -28,12 +30,12 @@ function App() {
 
         if ( value.toLowerCase() ===  "marc" || value.toLowerCase() === "liun"){
             const newNames = [...names];
-            newNames[index] = value + " the King";
+            newNames[index] = value + " de King";
             setNames(newNames);
         }
         else if (cringeList.includes(value.toLowerCase())){
         const newNames = [...names];
-        newNames[index] = value + " the Gay";
+        newNames[index] = value + " de Gay";
         setNames(newNames);
         }
         else {
@@ -102,6 +104,13 @@ function App() {
 
                     </div>
                 )}
+
+                {
+                    isComplete && (
+                        <ParticlesContainer/>
+                    )
+                }
+
                 <div id={"drop_gradient"}/>
                 <div id="drop_pattern"/>
             </div>
