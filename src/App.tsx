@@ -5,7 +5,7 @@ import ParticlesContainer from "./ParticlesContainer.tsx";
 
 function App() {
     //const [target, setTarget] = useState<Date>(createDate(2024, 6, 16, 6, 45));
-    const [target, setTarget] = useState<Date>(createDate(2025, 4, 3, 17, 00));
+    const [target, setTarget] = useState<Date>(createDate(2025, 4, 3, 17, 0));
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
