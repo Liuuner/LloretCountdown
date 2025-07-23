@@ -5,7 +5,7 @@ import ParticlesContainer from "./ParticlesContainer.tsx";
 
 function App() {
     //const [target, setTarget] = useState<Date>(createDate(2024, 6, 16, 6, 45));
-    const [target, setTarget] = useState<Date>(createDate(2025, 4, 3, 17, 0));
+    const [target, setTarget] = useState<Date>(createDate(2025, 7, 30, 15, 50));
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
@@ -89,7 +89,7 @@ function App() {
                     <div>
                         <div id={"plane"} className={isPlaneRight ? "right" : "left"}/>
                         <main>
-                            <h1 onClick={() => setIsDraw(true)}>Countdown to MC Movie</h1>
+                            <h1 onClick={() => setIsDraw(true)}>Countdown to going home from Crete</h1>
                             <FlipClockCountdown
                                 to={target}
                                 dividerStyle={{color: "#FFF"}}
