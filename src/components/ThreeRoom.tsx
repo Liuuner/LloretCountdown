@@ -257,7 +257,7 @@ function margaritaGlass() {
 
     // Schale
     const bowl = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.58, 0.42, 20),
+        new THREE.CylinderGeometry(0.58, 0.08, 0.42, 20),
         glassMat
     );
     bowl.position.y = 1.18;
@@ -265,15 +265,21 @@ function margaritaGlass() {
 
     // Drink innen
     const liquid = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.5, 0.22, 20),
+        new THREE.CylinderGeometry(
+            0.55,   // oben breit
+            0.18,   // unten schmal
+            0.3,
+            24
+        ),
         new THREE.MeshStandardMaterial({
             color: drinkColor,
             transparent: true,
-            opacity: 0.85,
-            roughness: 0.2,
+            opacity: 0.9,
+            roughness: 0.15,
         })
     );
-    liquid.position.y = 1.12;
+
+    liquid.position.y = 1.2;   // etwas höher damit es in der Schale sitzt
     g.add(liquid);
 
     // Stiel
