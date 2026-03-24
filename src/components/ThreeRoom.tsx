@@ -6,7 +6,19 @@ type ThreeRoomProps = {
     onClose?: () => void;
 };
 
-// ---------- TIME ----------
+type Collider = {
+    x: number;
+    z: number;
+    r: number;
+};
+
+type Interactable = {
+    object: THREE.Object3D;
+    radius: number;
+    message: string;
+    label: string;
+};
+
 function getTime(target: Date) {
     const d = Math.max(0, target.getTime() - Date.now());
     const s = Math.floor(d / 1000);
@@ -20,7 +32,6 @@ function getTime(target: Date) {
     };
 }
 
-// ---------- ROUND RECT ----------
 function roundRect(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -42,7 +53,6 @@ function roundRect(
     ctx.closePath();
 }
 
-// ---------- TEXT TEXTURE ----------
 function makeTextTexture(
     text: string,
     opts?: {
@@ -101,7 +111,6 @@ function makeTextTexture(
     return tex;
 }
 
-// ---------- PALM ----------
 function palm(height = 1) {
     const g = new THREE.Group();
 
@@ -127,7 +136,6 @@ function palm(height = 1) {
     return g;
 }
 
-// ---------- ROCK ----------
 function rock(size = 1) {
     const r = new THREE.Mesh(
         new THREE.IcosahedronGeometry(size, 1),
@@ -150,52 +158,46 @@ function coronaBottle() {
 
     const bottleColor = "#b9770e";
 
+    const glassMat = new THREE.MeshStandardMaterial({
+        color: bottleColor,
+        transparent: true,
+        opacity: 0.82,
+        roughness: 0.25,
+    });
+
     const body = new THREE.Mesh(
         new THREE.CylinderGeometry(0.18, 0.24, 1.5, 16),
-        new THREE.MeshStandardMaterial({
-            color: bottleColor,
-            transparent: true,
-            opacity: 0.82,
-            roughness: 0.25,
-        })
+        glassMat
     );
     body.position.y = 0.78;
     g.add(body);
 
     const shoulder = new THREE.Mesh(
         new THREE.CylinderGeometry(0.14, 0.18, 0.22, 16),
-        new THREE.MeshStandardMaterial({
-            color: bottleColor,
-            transparent: true,
-            opacity: 0.82,
-        })
+        glassMat
     );
     shoulder.position.y = 1.65;
     g.add(shoulder);
 
     const neck = new THREE.Mesh(
         new THREE.CylinderGeometry(0.08, 0.11, 0.38, 16),
-        new THREE.MeshStandardMaterial({
-            color: bottleColor,
-            transparent: true,
-            opacity: 0.82,
-        })
+        glassMat
     );
     neck.position.y = 1.95;
     g.add(neck);
 
-    const label = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.181, 0.221, 0.42, 20, 1, true),
+    const labelWrap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.245, 0.185, 0.42, 20, 1, true),
         new THREE.MeshStandardMaterial({
             color: "#f7e7a9",
             side: THREE.DoubleSide,
         })
     );
-    label.position.y = 0.95;
-    g.add(label);
+    labelWrap.position.y = 0.95;
+    g.add(labelWrap);
 
     const topLabel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.101, 0.111, 0.18, 20, 1, true),
+        new THREE.CylinderGeometry(0.112, 0.102, 0.18, 20, 1, true),
         new THREE.MeshStandardMaterial({
             color: "#f7e7a9",
             side: THREE.DoubleSide,
@@ -211,7 +213,6 @@ function coronaBottle() {
     crown.position.y = 2.18;
     g.add(crown);
 
-    // Corona Schrift als kleines Front-Label
     const front = new THREE.Mesh(
         new THREE.PlaneGeometry(0.42, 0.18),
         new THREE.MeshBasicMaterial({
@@ -227,10 +228,9 @@ function coronaBottle() {
             transparent: true,
         })
     );
-    front.position.set(0, 0.95, 0.23);
+    front.position.set(0, 0.95, 0.245);
     g.add(front);
 
-    // Limette oben
     const lime = new THREE.Mesh(
         new THREE.SphereGeometry(0.08, 10, 10),
         new THREE.MeshStandardMaterial({ color: "#9be15d" })
@@ -247,42 +247,48 @@ function margaritaGlass() {
     const glassMat = new THREE.MeshStandardMaterial({
         color: "#dff6ff",
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.32,
         roughness: 0.08,
         metalness: 0.05,
+        side: THREE.DoubleSide,
+        depthWrite: false,
     });
 
     const drinkColors = ["#b7ef6f", "#ffd166", "#ffadad", "#9bf6ff"];
     const drinkColor = drinkColors[Math.floor(Math.random() * drinkColors.length)];
 
-    // Schale
     const bowl = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.58, 0.08, 0.42, 20),
+        new THREE.CylinderGeometry(0.65, 0.18, 0.35, 32, 1, true),
         glassMat
     );
     bowl.position.y = 1.18;
     g.add(bowl);
 
-    // Drink innen
     const liquid = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            0.55,   // oben breit
-            0.18,   // unten schmal
-            0.3,
-            24
-        ),
+        new THREE.CylinderGeometry(0.5, 0.14, 0.2, 24),
         new THREE.MeshStandardMaterial({
             color: drinkColor,
             transparent: true,
-            opacity: 0.9,
-            roughness: 0.15,
+            opacity: 0.92,
+            roughness: 0.05,
+            metalness: 0.1,
         })
     );
-
-    liquid.position.y = 1.2;   // etwas höher damit es in der Schale sitzt
+    liquid.position.y = 1.17;
     g.add(liquid);
 
-    // Stiel
+    const surface = new THREE.Mesh(
+        new THREE.CircleGeometry(0.48, 32),
+        new THREE.MeshStandardMaterial({
+            color: drinkColor,
+            transparent: true,
+            opacity: 0.95,
+        })
+    );
+    surface.rotation.x = -Math.PI / 2;
+    surface.position.y = 1.28;
+    g.add(surface);
+
     const stem = new THREE.Mesh(
         new THREE.CylinderGeometry(0.04, 0.04, 0.62, 12),
         glassMat
@@ -290,7 +296,6 @@ function margaritaGlass() {
     stem.position.y = 0.68;
     g.add(stem);
 
-    // Fuss
     const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.24, 0.24, 0.05, 18),
         glassMat
@@ -298,37 +303,33 @@ function margaritaGlass() {
     base.position.y = 0.34;
     g.add(base);
 
-    // Salzrand
     const rim = new THREE.Mesh(
         new THREE.TorusGeometry(0.52, 0.025, 10, 28),
         new THREE.MeshStandardMaterial({ color: "#f8f9fa" })
     );
-    rim.position.y = 1.37;
+    rim.position.y = 1.33;
     rim.rotation.x = Math.PI / 2;
     g.add(rim);
 
-    // Limettenscheibe
     const lime = new THREE.Mesh(
         new THREE.TorusGeometry(0.11, 0.035, 8, 18),
         new THREE.MeshStandardMaterial({ color: "#a9e34b" })
     );
-    lime.position.set(0.34, 1.32, 0);
+    lime.position.set(0.34, 1.28, 0);
     lime.rotation.y = Math.PI / 2;
     g.add(lime);
 
-    // Strohhalm
     const straw = new THREE.Mesh(
         new THREE.CylinderGeometry(0.018, 0.018, 0.55, 8),
         new THREE.MeshStandardMaterial({ color: "#ffffff" })
     );
-    straw.position.set(-0.08, 1.42, 0);
+    straw.position.set(-0.08, 1.38, 0);
     straw.rotation.z = -0.45;
     g.add(straw);
 
     return g;
 }
 
-// ---------- CHAIR ----------
 function chair(color = "#ff8787") {
     const g = new THREE.Group();
 
@@ -349,9 +350,48 @@ function chair(color = "#ff8787") {
     return g;
 }
 
+function canPlace(
+    x: number,
+    z: number,
+    radius: number,
+    colliders: Collider[],
+    maxIslandRadius: number
+) {
+    const distFromCenter = Math.sqrt(x * x + z * z);
+    if (distFromCenter + radius > maxIslandRadius) return false;
+
+    for (const c of colliders) {
+        const dx = x - c.x;
+        const dz = z - c.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < radius + c.r) return false;
+    }
+
+    return true;
+}
+
+function placeRandom(
+    radius: number,
+    colliders: Collider[],
+    spread: number,
+    maxIslandRadius: number,
+    tries = 40
+) {
+    for (let i = 0; i < tries; i++) {
+        const x = (Math.random() - 0.5) * spread;
+        const z = (Math.random() - 0.5) * spread;
+        if (canPlace(x, z, radius, colliders, maxIslandRadius)) {
+            return { x, z };
+        }
+    }
+    return null;
+}
+
 export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
     const ref = useRef<HTMLDivElement>(null);
     const [locked, setLocked] = useState(false);
+    const [interactionText, setInteractionText] = useState("");
+    const [hintText, setHintText] = useState("");
 
     const target = useMemo(
         () => targetDate || new Date(2026, 6, 19, 12, 50),
@@ -361,10 +401,18 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
     useEffect(() => {
         if (!ref.current) return;
 
+        const PALM_COUNT = 24;
+        const ROCK_COUNT = 16;
+        const DRINK_COUNT = 12;
+        const CHAIR_COUNT = 8;
+        const MAX_ISLAND_RADIUS = 28;
+
+        const colliders: Collider[] = [];
+        const interactables: Interactable[] = [];
+
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2("#ff9966", 0.003);
 
-        // ---------- SKY ----------
         const skyGeo = new THREE.SphereGeometry(500, 32, 32);
         const skyMat = new THREE.ShaderMaterial({
             side: THREE.BackSide,
@@ -396,7 +444,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         });
         scene.add(new THREE.Mesh(skyGeo, skyMat));
 
-        // ---------- CAMERA / PLAYER ----------
         const camera = new THREE.PerspectiveCamera(
             75,
             window.innerWidth / window.innerHeight,
@@ -414,13 +461,11 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
 
         camera.position.set(0, 0, 0);
 
-        // ---------- RENDERER ----------
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
         ref.current.appendChild(renderer.domElement);
 
-        // ---------- LIGHT ----------
         scene.add(new THREE.AmbientLight(0xffffff, 0.72));
 
         const sunsetLight = new THREE.DirectionalLight("#ffb07c", 1.8);
@@ -431,7 +476,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         sunGlow.position.set(0, 35, -55);
         scene.add(sunGlow);
 
-        // ---------- ISLAND ----------
         const sand = new THREE.Mesh(
             new THREE.CircleGeometry(30, 96),
             new THREE.MeshStandardMaterial({
@@ -454,7 +498,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         shore.position.y = 0.02;
         scene.add(shore);
 
-        // ---------- WATER ----------
         const waterGeo = new THREE.RingGeometry(31, 140, 256);
         const waterMat = new THREE.ShaderMaterial({
             transparent: true,
@@ -497,7 +540,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         water.position.y = -0.24;
         scene.add(water);
 
-        // ---------- SUN ----------
         const sunDisc = new THREE.Mesh(
             new THREE.SphereGeometry(5.5, 24, 24),
             new THREE.MeshBasicMaterial({ color: "#ffb36b" })
@@ -505,10 +547,17 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         sunDisc.position.set(0, 18, -140);
         scene.add(sunDisc);
 
-        // ---------- BAR ----------
         const barGroup = new THREE.Group();
         barGroup.position.set(-8, 0, -4);
         scene.add(barGroup);
+
+        colliders.push({ x: -8, z: -4, r: 4.4 });
+        interactables.push({
+            object: barGroup,
+            radius: 4.5,
+            label: "Bar",
+            message: "Willkommen an der Neon Beach Bar ✨",
+        });
 
         const barBase = new THREE.Mesh(
             new THREE.BoxGeometry(7, 2.2, 2.4),
@@ -535,7 +584,7 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         const neonSign = new THREE.Mesh(
             new THREE.PlaneGeometry(4.8, 0.85),
             new THREE.MeshBasicMaterial({
-                map: makeTextTexture("BEACH BAR", {
+                map: makeTextTexture("NEON BEACH BAR", {
                     width: 1024,
                     height: 180,
                     fontSize: 54,
@@ -557,11 +606,15 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             barGroup.add(d);
         }
 
+        const barLight = new THREE.PointLight("#00ffff", 2, 20);
+        barLight.position.set(0, 4.2, 0.5);
+        barGroup.add(barLight);
 
-        // ---------- COUNTDOWN ----------
         const board = new THREE.Group();
         board.position.set(5, 0, -6);
         scene.add(board);
+
+        colliders.push({ x: 5, z: -6, r: 4.3 });
 
         const posts = [-4.5, 4.5];
         posts.forEach((x) => {
@@ -657,7 +710,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             board.add(label);
         }
 
-        // ---------- BOAT ----------
         const boatGroup = new THREE.Group();
         boatGroup.position.set(9, -0.05, -40);
         scene.add(boatGroup);
@@ -668,54 +720,82 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         );
         boatGroup.add(hull);
 
-        // ---------- PALMS ----------
-        for (let i = 0; i < 30; i++) {
-            const p = palm(0.8 + Math.random() * 0.45);
-            const a = Math.random() * Math.PI * 2;
-            const r = 17 + Math.random() * 11;
-            p.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-            p.rotation.y = Math.random() * Math.PI * 2;
-            scene.add(p);
+        for (let i = 0; i < PALM_COUNT; i++) {
+            let placed = false;
+
+            for (let t = 0; t < 50 && !placed; t++) {
+                const a = Math.random() * Math.PI * 2;
+                const r = 17 + Math.random() * 9;
+                const x = Math.cos(a) * r;
+                const z = Math.sin(a) * r;
+                const radius = 1.4;
+
+                if (!canPlace(x, z, radius, colliders, MAX_ISLAND_RADIUS)) continue;
+
+                const p = palm(0.8 + Math.random() * 0.45);
+                p.position.set(x, 0, z);
+                p.rotation.y = Math.random() * Math.PI * 2;
+                scene.add(p);
+
+                colliders.push({ x, z, r: radius });
+                placed = true;
+            }
         }
 
-        // ---------- ROCKS ----------
-        for (let i = 0; i < 40; i++) {
-            const rr = 18 + Math.random() * 15;
-            const ang = Math.random() * Math.PI * 2;
-            const r = rock(Math.random() * 1.8 + 0.35);
-            r.position.set(Math.cos(ang) * rr, 0.2, Math.sin(ang) * rr);
+        for (let i = 0; i < ROCK_COUNT; i++) {
+            const pos = placeRandom(1.15, colliders, 44, MAX_ISLAND_RADIUS, 50);
+            if (!pos) continue;
+
+            const r = rock(Math.random() * 1.2 + 0.45);
+            r.position.set(pos.x, 0.2, pos.z);
             scene.add(r);
+
+            colliders.push({ x: pos.x, z: pos.z, r: 1.15 });
         }
 
-// ---------- DRINKS ----------
-        for (let i = 0; i < 25; i++) {
-            const drink = Math.random() > 0.45 ? coronaBottle() : margaritaGlass();
+        for (let i = 0; i < DRINK_COUNT; i++) {
+            const pos = placeRandom(0.7, colliders, 26, MAX_ISLAND_RADIUS, 50);
+            if (!pos) continue;
+
+            const isCorona = Math.random() > 0.45;
+            const drink = isCorona ? coronaBottle() : margaritaGlass();
             drink.rotation.y = Math.random() * Math.PI * 2;
-            drink.position.set((Math.random() - 0.5) * 38, 0, (Math.random() - 0.5) * 38);
+            drink.position.set(pos.x, 0, pos.z);
             scene.add(drink);
+
+            colliders.push({ x: pos.x, z: pos.z, r: 0.7 });
+            interactables.push({
+                object: drink,
+                radius: 1.6,
+                label: isCorona ? "Corona" : "Margarita",
+                message: isCorona
+                    ? "Du trinkst ein Corona 🍺"
+                    : "Du trinkst eine Margarita 🍸",
+            });
         }
 
-        // ---------- CHAIRS ----------
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < CHAIR_COUNT; i++) {
+            const pos = placeRandom(1.1, colliders, 28, MAX_ISLAND_RADIUS, 40);
+            if (!pos) continue;
+
             const c = chair(["#ff8787", "#ffd43b", "#4dabf7", "#69db7c"][i % 4]);
-            c.position.set((Math.random() - 0.5) * 25, 0, (Math.random() - 0.5) * 25);
+            c.position.set(pos.x, 0, pos.z);
             c.rotation.y = Math.random() * Math.PI * 2;
             scene.add(c);
+
+            colliders.push({ x: pos.x, z: pos.z, r: 1.1 });
         }
 
-        // ---------- INPUT ----------
         const keys = {
             forward: false,
             backward: false,
             left: false,
             right: false,
             sprint: false,
-            jump: false,
         };
 
         let yaw = 0;
         let pitch = 0;
-
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
@@ -725,6 +805,37 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         const WALK_SPEED = 6;
         const SPRINT_SPEED = 11;
         let canJump = true;
+
+        let interactionTimeout: number | null = null;
+
+        const showInteractionMessage = (msg: string) => {
+            setInteractionText(msg);
+            if (interactionTimeout) window.clearTimeout(interactionTimeout);
+            interactionTimeout = window.setTimeout(() => {
+                setInteractionText("");
+            }, 1600);
+        };
+
+        const getClosestInteractable = () => {
+            let closest: Interactable | null = null;
+            let closestDist = Infinity;
+
+            for (const item of interactables) {
+                const pos = new THREE.Vector3();
+                item.object.getWorldPosition(pos);
+
+                const dx = player.position.x - pos.x;
+                const dz = player.position.z - pos.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+
+                if (dist < item.radius && dist < closestDist) {
+                    closest = item;
+                    closestDist = dist;
+                }
+            }
+
+            return closest;
+        };
 
         const onKeyDown = (e: KeyboardEvent) => {
             switch (e.code) {
@@ -745,12 +856,18 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                     keys.sprint = true;
                     break;
                 case "Space":
-                    keys.jump = true;
                     if (canJump) {
                         velocity.y = JUMP_FORCE;
                         canJump = false;
                     }
                     break;
+                case "KeyE": {
+                    const hit = getClosestInteractable();
+                    if (hit) {
+                        showInteractionMessage(hit.message);
+                    }
+                    break;
+                }
                 case "Escape":
                     document.exitPointerLock?.();
                     break;
@@ -774,9 +891,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                 case "ShiftLeft":
                 case "ShiftRight":
                     keys.sprint = false;
-                    break;
-                case "Space":
-                    keys.jump = false;
                     break;
             }
         };
@@ -809,7 +923,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         document.addEventListener("keydown", onKeyDown);
         document.addEventListener("keyup", onKeyUp);
 
-        // ---------- RESIZE ----------
         const handleResize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -817,7 +930,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         };
         window.addEventListener("resize", handleResize);
 
-        // ---------- LOOP ----------
         let raf = 0;
         let last = performance.now();
 
@@ -847,7 +959,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             boatGroup.position.y = -0.05 + Math.sin(nowMs * 0.0014) * 0.18;
             boatGroup.rotation.z = Math.sin(nowMs * 0.0011) * 0.06;
 
-            // movement
             direction.set(0, 0, 0);
             if (keys.forward) direction.z -= 1;
             if (keys.backward) direction.z += 1;
@@ -857,23 +968,22 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             if (direction.lengthSq() > 0) direction.normalize();
 
             const speed = keys.sprint ? SPRINT_SPEED : WALK_SPEED;
-
             const move = new THREE.Vector3(direction.x, 0, direction.z);
             move.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
 
-            player.position.x += move.x * speed * dt;
-            player.position.z += move.z * speed * dt;
+            const nextX = player.position.x + move.x * speed * dt;
+            const nextZ = player.position.z + move.z * speed * dt;
 
-            // simple island boundary
+            player.position.x = nextX;
+            player.position.z = nextZ;
+
             const radius = Math.sqrt(player.position.x ** 2 + player.position.z ** 2);
-            const maxRadius = 28;
-            if (radius > maxRadius) {
+            if (radius > MAX_ISLAND_RADIUS) {
                 const angle = Math.atan2(player.position.z, player.position.x);
-                player.position.x = Math.cos(angle) * maxRadius;
-                player.position.z = Math.sin(angle) * maxRadius;
+                player.position.x = Math.cos(angle) * MAX_ISLAND_RADIUS;
+                player.position.z = Math.sin(angle) * MAX_ISLAND_RADIUS;
             }
 
-            // gravity / jump
             velocity.y -= GRAVITY * dt;
             player.position.y += velocity.y * dt;
 
@@ -883,6 +993,9 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                 canJump = true;
             }
 
+            const closest = getClosestInteractable();
+            setHintText(closest ? `E drücken: ${closest.label}` : "");
+
             renderer.render(scene, camera);
             raf = requestAnimationFrame(loop);
         };
@@ -891,6 +1004,7 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
 
         return () => {
             cancelAnimationFrame(raf);
+            if (interactionTimeout) window.clearTimeout(interactionTimeout);
             window.removeEventListener("resize", handleResize);
             document.removeEventListener("pointerlockchange", onPointerLockChange);
             document.removeEventListener("mousemove", onMouseMove);
@@ -950,7 +1064,47 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                         backdropFilter: "blur(8px)",
                     }}
                 >
-                    Klick ins Bild für Maussteuerung • WASD laufen • Shift sprint • Space jump • ESC frei
+                    Klick ins Bild für Maussteuerung • WASD laufen • Shift sprint • Space jump • E interagieren • ESC frei
+                </div>
+            )}
+
+            {hintText && (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: "50%",
+                        bottom: 86,
+                        transform: "translateX(-50%)",
+                        padding: "10px 16px",
+                        borderRadius: 12,
+                        background: "rgba(0,0,0,0.55)",
+                        color: "#fff",
+                        fontSize: 14,
+                        backdropFilter: "blur(8px)",
+                        pointerEvents: "none",
+                    }}
+                >
+                    {hintText}
+                </div>
+            )}
+
+            {interactionText && (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: "50%",
+                        top: 24,
+                        transform: "translateX(-50%)",
+                        padding: "12px 18px",
+                        borderRadius: 14,
+                        background: "rgba(0,0,0,0.65)",
+                        color: "#fff",
+                        fontSize: 15,
+                        backdropFilter: "blur(8px)",
+                        pointerEvents: "none",
+                    }}
+                >
+                    {interactionText}
                 </div>
             )}
 
