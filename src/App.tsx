@@ -5,12 +5,14 @@ import ParticlesContainer from "./ParticlesContainer.tsx";
 
 function App() {
     //const [target, setTarget] = useState<Date>(createDate(2024, 6, 16, 6, 45));
-    const [target, setTarget] = useState<Date>(createDate(2025, 7, 30, 15, 50));
+    //const [target, setTarget] = useState<Date>(createDate(2025, 7, 30, 15, 50));
+
+    const [target, setTarget] = useState<Date>(createDate(2026, 7, 19, 12, 50));
     const [isComplete, setIsComplete] = useState(false);
     const [isPlaneRight, setIsPlaneRight] = useState<boolean>(true);
     const [isDraw, setIsDraw] = useState(false);
 
-    const cringeList = ["lars", "gian", "silvan", "laurin", "luca", "jens", "julian", "pablo", "jerome"]
+    const cringeList = ["lars", "leo", "silvan", "laurin", "luca", "alex", "noe", "jerome"]
     const handleOnComplete = () => {
         setIsComplete(true);
     }
@@ -23,8 +25,8 @@ function App() {
     // @ts-expect-error
     window.setTarget = setTarget;
 
-    const [names, setNames] = useState<string[]>(Array(11).fill(''));
-    const [assignedNames, setAssignedNames] = useState<string[]>(Array(11).fill(''));
+    const [names, setNames] = useState<string[]>(Array(10).fill(''));
+    const [assignedNames, setAssignedNames] = useState<string[]>(Array(10).fill(''));
 
     const handleNameChange = (index: number, value: string) => {
 
@@ -89,7 +91,7 @@ function App() {
                     <div>
                         <div id={"plane"} className={isPlaneRight ? "right" : "left"}/>
                         <main>
-                            <h1 onClick={() => setIsDraw(true)}>Countdown to going home from Crete</h1>
+                            <h1 onClick={() => setIsDraw(true)}>Countdown to Ayia Napa</h1>
                             <FlipClockCountdown
                                 to={target}
                                 dividerStyle={{color: "#FFF"}}
