@@ -2,6 +2,7 @@ import './App.css';
 import FlipClockCountdown, { createDate } from "./components/FlipClockCountdown";
 import { useState } from "react";
 import ParticlesContainer from "./ParticlesContainer.tsx";
+import FireworksOverlay from "./components/FireworksOverlay";
 
 function App() {
     //const [target, setTarget] = useState<Date>(createDate(2024, 6, 16, 6, 45));
@@ -112,6 +113,8 @@ function App() {
                         <ParticlesContainer/>
                     )
                 }
+
+                <FireworksOverlay />
 
                 <div id={"drop_gradient"}/>
                 <div id="drop_pattern"/>
