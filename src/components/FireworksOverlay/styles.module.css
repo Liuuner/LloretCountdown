@@ -1,0 +1,221 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 100;
+}
+
+/* Projectile container */
+.projectile {
+  position: absolute;
+  font-size: 2.5rem;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* Flying from left side */
+.projectile.fromLeft {
+  left: -50px;
+  animation: flyFromLeft var(--flight-duration, 3000ms) linear forwards;
+}
+
+/* Flying from right side */
+.projectile.fromRight {
+  right: -50px;
+  animation: flyFromRight var(--flight-duration, 3000ms) linear forwards;
+}
+
+/* Rocket rotation based on direction */
+.projectile.fromLeft .projectileIcon.rocket {
+  display: inline-block;
+  transform: rotate(45deg);
+}
+
+.projectile.fromRight .projectileIcon.rocket {
+  display: inline-block;
+  transform: rotate(135deg);
+}
+
+/* Bomb wobble animation */
+.projectile .projectileIcon.bomb {
+  display: inline-block;
+  animation: wobble 0.3s ease-in-out infinite;
+}
+
+@keyframes wobble {
+  0%, 100% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+/* Flight path from left - arc trajectory */
+@keyframes flyFromLeft {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(25vw, -80px);
+  }
+  50% {
+    transform: translate(50vw, -120px);
+  }
+  75% {
+    transform: translate(70vw, -60px);
+  }
+  100% {
+    transform: translate(85vw, 0);
+    opacity: 1;
+  }
+}
+
+/* Flight path from right - arc trajectory */
+@keyframes flyFromRight {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-25vw, -80px);
+  }
+  50% {
+    transform: translate(-50vw, -120px);
+  }
+  75% {
+    transform: translate(-70vw, -60px);
+  }
+  100% {
+    transform: translate(-85vw, 0);
+    opacity: 1;
+  }
+}
+
+/* Explosion container */
+.explosion {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Explosion center flash */
+.explosionCenter {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffcc00 30%, #ff6600 60%, transparent 70%);
+  transform: translate(-50%, -50%);
+  animation: explosionFlash var(--explosion-duration, 800ms) ease-out forwards;
+}
+
+@keyframes explosionFlash {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* Explosion particles */
+.explosionParticle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: particleBurst var(--explosion-duration, 800ms) ease-out forwards;
+  animation-delay: var(--particle-delay, 0ms);
+}
+
+.explosionParticle:nth-child(odd) {
+  background: linear-gradient(135deg, #ff4444, #ff8800);
+}
+
+.explosionParticle:nth-child(even) {
+  background: linear-gradient(135deg, #ffcc00, #ffff00);
+}
+
+.explosionParticle:nth-child(3n) {
+  background: linear-gradient(135deg, #ff6600, #ff0066);
+  width: 8px;
+  height: 8px;
+}
+
+@keyframes particleBurst {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) 
+               translate(var(--end-x, 0), var(--end-y, 0)) 
+               scale(0);
+    opacity: 0;
+  }
+}
+
+/* Spark trails */
+.spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffff00;
+  border-radius: 50%;
+  box-shadow: 0 0 6px 2px rgba(255, 200, 0, 0.8);
+  animation: sparkFly var(--explosion-duration, 800ms) ease-out forwards;
+  animation-delay: var(--spark-delay, 0ms);
+}
+
+@keyframes sparkFly {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(var(--spark-x) * 1px),
+      calc(var(--spark-y) * 1px)
+    );
+    opacity: 0;
+  }
+}
+
+/* Smoke ring effect */
+.smokeRing {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(100, 100, 100, 0.6);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: smokeExpand var(--explosion-duration, 800ms) ease-out forwards;
+  animation-delay: 100ms;
+}
+
+@keyframes smokeExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+    border-width: 3px;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(8);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
