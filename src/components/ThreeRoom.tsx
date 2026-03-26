@@ -1,6 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
+type RemotePlayerState = {
+    id: string;
+    name: string;
+    x: number;
+    y: number;
+    z: number;
+    yaw: number;
+    pitch: number;
+    updatedAt: number;
+};
+
+type MultiplayerEvent =
+    | { type: "snapshot"; players: RemotePlayerState[] }
+    | { type: "state"; player: RemotePlayerState }
+    | { type: "leave"; id: string };
+
 type ThreeRoomProps = {
     targetDate?: Date;
     onClose?: () => void;
@@ -17,7 +33,119 @@ type Interactable = {
     radius: number;
     message: string;
     label: string;
+    kind?: "drink" | "bar" | "other";
+    consumed?: boolean;
 };
+
+const PLAYER_ID_KEY = "three-room-player-id";
+const PLAYER_NAME_KEY = "three-room-player-name";
+const REMOTE_PLAYER_TTL = 7000;
+
+function createPlayerId() {
+    return `player-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function pickDefaultPlayerName() {
+    const saved = window.localStorage.getItem(PLAYER_NAME_KEY)?.trim();
+    if (saved) return saved;
+    return `Guest-${Math.floor(100 + Math.random() * 900)}`;
+}
+
+function getOrCreatePlayerId() {
+    const saved = window.localStorage.getItem(PLAYER_ID_KEY)?.trim();
+    if (saved) return saved;
+    const next = createPlayerId();
+    window.localStorage.setItem(PLAYER_ID_KEY, next);
+    return next;
+}
+
+async function postMultiplayerState(player: RemotePlayerState) {
+    await fetch("/multiplayer/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ player }),
+    });
+}
+
+async function postMultiplayerLeave(id: string) {
+    await fetch("/multiplayer/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+    });
+}
+
+function makeNameTagSprite(text: string) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 160;
+    const ctx = canvas.getContext("2d")!;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
+    roundRect(ctx, 10, 16, canvas.width - 20, canvas.height - 32, 24);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.95)";
+    ctx.lineWidth = 6;
+    roundRect(ctx, 10, 16, canvas.width - 20, canvas.height - 32, 24);
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = '700 54px "Arial", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(2.8, 0.88, 1);
+    return sprite;
+}
+
+function createRemoteAvatar(name: string, hue = Math.random()) {
+    const group = new THREE.Group();
+    const color = new THREE.Color().setHSL(hue, 0.85, 0.55);
+
+    const bodyRadius = 0.33;
+    const bodyLength = 0.8;
+    const headRadius = 0.26;
+    const bodyHeight = bodyLength + bodyRadius * 2;
+    const bodyCenterY = bodyHeight / 2;
+
+    const body = new THREE.Mesh(
+        new THREE.CapsuleGeometry(bodyRadius, bodyLength, 6, 10),
+        new THREE.MeshStandardMaterial({ color, emissive: color.clone().multiplyScalar(0.18) })
+    );
+    body.position.y = bodyCenterY;
+    group.add(body);
+
+    const head = new THREE.Mesh(
+        new THREE.SphereGeometry(headRadius, 20, 20),
+        new THREE.MeshStandardMaterial({ color: "#f2d3b1" })
+    );
+    head.position.y = bodyHeight + headRadius * 0.9;
+    group.add(head);
+
+    const marker = new THREE.Mesh(
+        new THREE.ConeGeometry(0.12, 0.28, 12),
+        new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#00e5ff", emissiveIntensity: 0.6 })
+    );
+    marker.rotation.x = Math.PI;
+    marker.position.y = head.position.y + 0.5;
+    group.add(marker);
+
+    const nameTag = makeNameTagSprite(name);
+    nameTag.position.y = head.position.y + 0.85;
+    group.add(nameTag);
+
+    return { group, nameTag };
+}
 
 function getTime(target: Date) {
     const d = Math.max(0, target.getTime() - Date.now());
@@ -389,14 +517,31 @@ function placeRandom(
 
 export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
     const ref = useRef<HTMLDivElement>(null);
+    const playerIdRef = useRef<string>(getOrCreatePlayerId());
+    const [playerName, setPlayerName] = useState(() => pickDefaultPlayerName());
+    const playerNameRef = useRef(playerName);
+    const drunkLevelRef = useRef(0);
+
     const [locked, setLocked] = useState(false);
     const [interactionText, setInteractionText] = useState("");
     const [hintText, setHintText] = useState("");
+    const [onlineCount, setOnlineCount] = useState(1);
+    const [drunkLevel, setDrunkLevel] = useState(0);
 
     const target = useMemo(
         () => targetDate || new Date(2026, 6, 19, 12, 50),
         [targetDate]
     );
+
+    useEffect(() => {
+        const nextName = playerName.trim() || pickDefaultPlayerName();
+        playerNameRef.current = nextName;
+        window.localStorage.setItem(PLAYER_NAME_KEY, nextName);
+    }, [playerName]);
+
+    useEffect(() => {
+        drunkLevelRef.current = drunkLevel;
+    }, [drunkLevel]);
 
     useEffect(() => {
         if (!ref.current) return;
@@ -417,7 +562,7 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         const skyMat = new THREE.ShaderMaterial({
             side: THREE.BackSide,
             uniforms: {
-                top: { value: new THREE.Color("#ff5f6d") },
+                top: { value: new THREE.Color("#1d4e89") },
                 mid: { value: new THREE.Color("#ff2d55") },
                 bottom: { value: new THREE.Color("#1d4e89") },
             },
@@ -557,6 +702,8 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             radius: 4.5,
             label: "Bar",
             message: "Willkommen an der Neon Beach Bar ✨",
+            kind: "bar",
+            consumed: false,
         });
 
         const barBase = new THREE.Mesh(
@@ -616,7 +763,7 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
 
         colliders.push({ x: 5, z: -6, r: 4.3 });
 
-        const posts = [-4.5, 4.5];
+        const posts = [-5.5, 5.5];
         posts.forEach((x) => {
             const post = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.22, 0.28, 5.5, 12),
@@ -771,6 +918,8 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                 message: isCorona
                     ? "Du trinkst ein Corona 🍺"
                     : "Du trinkst eine Margarita 🍸",
+                kind: "drink",
+                consumed: false,
             });
         }
 
@@ -807,6 +956,92 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         let canJump = true;
 
         let interactionTimeout: number | null = null;
+        let visualDrunk = 0;
+        let wobbleTime = 0;
+
+        const remotePlayers = new Map<string, {
+            root: THREE.Group;
+            nameTag: THREE.Sprite;
+            targetPosition: THREE.Vector3;
+            currentPosition: THREE.Vector3;
+            targetYaw: number;
+            currentYaw: number;
+            updatedAt: number;
+            name: string;
+        }>();
+        let eventSource: EventSource | null = null;
+        let networkBroadcastTimer: number | null = null;
+        let reconnectTimer: number | null = null;
+
+        const getSelfState = (): RemotePlayerState => ({
+            id: playerIdRef.current,
+            name: playerNameRef.current || "Guest",
+            x: player.position.x,
+            y: player.position.y,
+            z: player.position.z,
+            yaw,
+            pitch,
+            updatedAt: Date.now(),
+        });
+
+        const updateOnlineCount = () => {
+            setOnlineCount(remotePlayers.size + 1);
+        };
+
+        const removeRemotePlayer = (id: string) => {
+            const remote = remotePlayers.get(id);
+            if (!remote) return;
+            scene.remove(remote.root);
+            remotePlayers.delete(id);
+            updateOnlineCount();
+        };
+
+        const upsertRemotePlayer = (state: RemotePlayerState) => {
+            if (state.id === playerIdRef.current) return;
+
+            let remote = remotePlayers.get(state.id);
+            if (!remote) {
+                const { group, nameTag } = createRemoteAvatar(state.name);
+                group.position.set(state.x, 0, state.z);
+                group.rotation.y = state.yaw;
+                scene.add(group);
+                remote = {
+                    root: group,
+                    nameTag,
+                    targetPosition: new THREE.Vector3(state.x, 0, state.z),
+                    currentPosition: new THREE.Vector3(state.x, 0, state.z),
+                    targetYaw: state.yaw,
+                    currentYaw: state.yaw,
+                    updatedAt: state.updatedAt,
+                    name: state.name,
+                };
+                remotePlayers.set(state.id, remote);
+                updateOnlineCount();
+            }
+
+            remote.targetPosition.set(state.x, 0, state.z);
+            remote.targetYaw = state.yaw;
+            remote.updatedAt = state.updatedAt;
+
+            if (remote.name !== state.name) {
+                remote.name = state.name;
+                const nextTag = makeNameTagSprite(state.name);
+                nextTag.position.copy(remote.nameTag.position);
+                remote.root.remove(remote.nameTag);
+                (remote.nameTag.material as THREE.SpriteMaterial).map?.dispose();
+                (remote.nameTag.material as THREE.SpriteMaterial).dispose();
+                remote.nameTag = nextTag;
+                remote.root.add(nextTag);
+            }
+        };
+
+        const syncSelfState = async () => {
+            try {
+                await postMultiplayerState(getSelfState());
+            } catch (error) {
+                console.warn("Multiplayer sync failed", error);
+            }
+        };
 
         const showInteractionMessage = (msg: string) => {
             setInteractionText(msg);
@@ -819,13 +1054,15 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
         const getClosestInteractable = () => {
             let closest: Interactable | null = null;
             let closestDist = Infinity;
+            const tempPos = new THREE.Vector3();
 
             for (const item of interactables) {
-                const pos = new THREE.Vector3();
-                item.object.getWorldPosition(pos);
+                if (item.consumed) continue;
 
-                const dx = player.position.x - pos.x;
-                const dz = player.position.z - pos.z;
+                item.object.getWorldPosition(tempPos);
+
+                const dx = player.position.x - tempPos.x;
+                const dz = player.position.z - tempPos.z;
                 const dist = Math.sqrt(dx * dx + dz * dz);
 
                 if (dist < item.radius && dist < closestDist) {
@@ -835,6 +1072,30 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             }
 
             return closest;
+        };
+
+        const drinkItem = (item: Interactable) => {
+            if (item.consumed || item.kind !== "drink") return;
+
+            item.consumed = true;
+            scene.remove(item.object);
+
+            item.object.traverse((child) => {
+                const mesh = child as THREE.Mesh & { material?: THREE.Material | THREE.Material[] };
+                mesh.geometry?.dispose?.();
+
+                if (Array.isArray(mesh.material)) {
+                    mesh.material.forEach((m) => m?.dispose?.());
+                } else {
+                    mesh.material?.dispose?.();
+                }
+            });
+
+            const nextDrunk = Math.min(1, drunkLevelRef.current + 0.18);
+            drunkLevelRef.current = nextDrunk;
+            setDrunkLevel(nextDrunk);
+
+            showInteractionMessage(`${item.message} • Alkoholpegel: ${Math.round(nextDrunk * 100)}%`);
         };
 
         const onKeyDown = (e: KeyboardEvent) => {
@@ -864,7 +1125,11 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                 case "KeyE": {
                     const hit = getClosestInteractable();
                     if (hit) {
-                        showInteractionMessage(hit.message);
+                        if (hit.kind === "drink") {
+                            drinkItem(hit);
+                        } else {
+                            showInteractionMessage(hit.message);
+                        }
                     }
                     break;
                 }
@@ -914,9 +1179,69 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             setLocked(isLocked);
         };
 
+        const applyMultiplayerEvent = (data: MultiplayerEvent) => {
+            if (!data) return;
+
+            if (data.type === "snapshot") {
+                const keepIds = new Set<string>();
+                data.players.forEach((remoteState) => {
+                    if (remoteState.id !== playerIdRef.current) {
+                        keepIds.add(remoteState.id);
+                        upsertRemotePlayer(remoteState);
+                    }
+                });
+                for (const id of Array.from(remotePlayers.keys())) {
+                    if (!keepIds.has(id)) {
+                        removeRemotePlayer(id);
+                    }
+                }
+                return;
+            }
+
+            if (data.type === "state") {
+                upsertRemotePlayer(data.player);
+                return;
+            }
+
+            if (data.type === "leave") {
+                removeRemotePlayer(data.id);
+            }
+        };
+
+        const connectMultiplayer = () => {
+            eventSource?.close();
+            eventSource = new EventSource(`/multiplayer/events?playerId=${encodeURIComponent(playerIdRef.current)}`);
+
+            eventSource.addEventListener("snapshot", (event) => {
+                applyMultiplayerEvent(JSON.parse((event as MessageEvent).data) as MultiplayerEvent);
+            });
+            eventSource.addEventListener("state", (event) => {
+                applyMultiplayerEvent(JSON.parse((event as MessageEvent).data) as MultiplayerEvent);
+            });
+            eventSource.addEventListener("leave", (event) => {
+                applyMultiplayerEvent(JSON.parse((event as MessageEvent).data) as MultiplayerEvent);
+            });
+            eventSource.onerror = () => {
+                eventSource?.close();
+                eventSource = null;
+                if (reconnectTimer === null) {
+                    reconnectTimer = window.setTimeout(() => {
+                        reconnectTimer = null;
+                        connectMultiplayer();
+                    }, 1200);
+                }
+            };
+        };
+
         renderer.domElement.addEventListener("click", () => {
             renderer.domElement.requestPointerLock();
         });
+
+        connectMultiplayer();
+        void syncSelfState();
+        networkBroadcastTimer = window.setInterval(() => {
+            void syncSelfState();
+        }, 120);
 
         document.addEventListener("pointerlockchange", onPointerLockChange);
         document.addEventListener("mousemove", onMouseMove);
@@ -937,6 +1262,16 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             const dt = Math.min(0.033, (nowMs - last) / 1000);
             last = nowMs;
 
+            wobbleTime += dt;
+
+            drunkLevelRef.current = Math.max(0, drunkLevelRef.current - dt * 0.012);
+            setDrunkLevel((prev) => {
+                const next = Math.max(0, prev - dt * 0.012);
+                return Math.abs(next - prev) > 0.0005 ? next : prev;
+            });
+
+            visualDrunk += (drunkLevelRef.current - visualDrunk) * Math.min(1, dt * 2.5);
+
             const t = getTime(target);
             const arr = [t.w, t.d, t.h, t.m, t.s];
 
@@ -955,7 +1290,6 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             });
 
             waterMat.uniforms.time.value = nowMs * 0.001;
-
             boatGroup.position.y = -0.05 + Math.sin(nowMs * 0.0014) * 0.18;
             boatGroup.rotation.z = Math.sin(nowMs * 0.0011) * 0.06;
 
@@ -969,7 +1303,9 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
 
             const speed = keys.sprint ? SPRINT_SPEED : WALK_SPEED;
             const move = new THREE.Vector3(direction.x, 0, direction.z);
-            move.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+            const stumbleAngle =
+                Math.sin(wobbleTime * (2.1 + visualDrunk * 1.5)) * visualDrunk * 0.22;
+            move.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw + stumbleAngle);
 
             const nextX = player.position.x + move.x * speed * dt;
             const nextZ = player.position.z + move.z * speed * dt;
@@ -996,6 +1332,31 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             const closest = getClosestInteractable();
             setHintText(closest ? `E drücken: ${closest.label}` : "");
 
+            for (const [id, remote] of remotePlayers) {
+                if (Date.now() - remote.updatedAt > REMOTE_PLAYER_TTL) {
+                    removeRemotePlayer(id);
+                    continue;
+                }
+
+                remote.currentPosition.lerp(remote.targetPosition, Math.min(1, dt * 10));
+                remote.root.position.copy(remote.currentPosition);
+                remote.currentYaw += (remote.targetYaw - remote.currentYaw) * Math.min(1, dt * 10);
+                remote.root.rotation.y = remote.currentYaw;
+                remote.nameTag.lookAt(camera.position);
+            }
+
+            const wobble = visualDrunk * 0.035;
+            const roll = Math.sin(wobbleTime * (1.8 + visualDrunk * 2.2)) * wobble;
+            const swayX = Math.sin(wobbleTime * (1.6 + visualDrunk * 1.4)) * visualDrunk * 0.08;
+            const swayY = Math.cos(wobbleTime * (2.4 + visualDrunk * 1.7)) * visualDrunk * 0.05;
+            const zoomPulse = 75 + Math.sin(wobbleTime * 1.3) * visualDrunk * 4.5;
+
+            camera.rotation.z = roll;
+            camera.position.x = swayX;
+            camera.position.y = swayY;
+            camera.fov += (zoomPulse - camera.fov) * Math.min(1, dt * 2.2);
+            camera.updateProjectionMatrix();
+
             renderer.render(scene, camera);
             raf = requestAnimationFrame(loop);
         };
@@ -1007,6 +1368,10 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             if (interactionTimeout) window.clearTimeout(interactionTimeout);
             window.removeEventListener("resize", handleResize);
             document.removeEventListener("pointerlockchange", onPointerLockChange);
+            if (networkBroadcastTimer !== null) window.clearInterval(networkBroadcastTimer);
+            if (reconnectTimer !== null) window.clearTimeout(reconnectTimer);
+            eventSource?.close();
+            void postMultiplayerLeave(playerIdRef.current).catch(() => undefined);
             document.removeEventListener("mousemove", onMouseMove);
             document.removeEventListener("keydown", onKeyDown);
             document.removeEventListener("keyup", onKeyUp);
@@ -1018,6 +1383,11 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
             if (ref.current && renderer.domElement.parentNode === ref.current) {
                 ref.current.removeChild(renderer.domElement);
             }
+
+            remotePlayers.forEach((remote) => {
+                (remote.nameTag.material as THREE.SpriteMaterial).map?.dispose();
+                (remote.nameTag.material as THREE.SpriteMaterial).dispose();
+            });
 
             renderer.dispose();
         };
@@ -1068,6 +1438,44 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                 </div>
             )}
 
+            <div
+                style={{
+                    position: "absolute",
+                    top: 20,
+                    left: 20,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    padding: "12px 14px",
+                    borderRadius: 14,
+                    background: "rgba(0,0,0,0.55)",
+                    color: "#fff",
+                    backdropFilter: "blur(8px)",
+                    minWidth: 240,
+                }}
+            >
+                <div style={{ fontSize: 13, opacity: 0.78 }}>Online multiplayer</div>
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                    Dein Name
+                    <input
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value.slice(0, 18))}
+                        style={{
+                            borderRadius: 10,
+                            border: "1px solid rgba(255,255,255,0.18)",
+                            background: "rgba(255,255,255,0.08)",
+                            color: "#fff",
+                            padding: "8px 10px",
+                            outline: "none",
+                        }}
+                    />
+                </label>
+                <div style={{ fontSize: 13, opacity: 0.88 }}>Online in room: {onlineCount}</div>
+                <div style={{ fontSize: 13, opacity: 0.88 }}>
+                    Pegel: {Math.round(drunkLevel * 100)}%
+                </div>
+            </div>
+
             {hintText && (
                 <div
                     style={{
@@ -1107,6 +1515,22 @@ export default function ThreeRoom({ targetDate, onClose }: ThreeRoomProps) {
                     {interactionText}
                 </div>
             )}
+
+            <div
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    pointerEvents: "none",
+                    background: `radial-gradient(
+                        circle at center,
+                        rgba(255,255,255,0) 40%,
+                        rgba(120, 255, 120, ${drunkLevel * 0.06}) 62%,
+                        rgba(0, 0, 0, ${drunkLevel * 0.22}) 100%
+                    )`,
+                    mixBlendMode: "screen",
+                    opacity: 0.9,
+                }}
+            />
 
             <button
                 onClick={onClose}
